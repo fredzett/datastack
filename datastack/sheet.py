@@ -3,8 +3,6 @@ import numpy as np
 
 class Sheet:
     def __init__(self, **columns):
-    'some comment'
-
         self._labels = []
         self._data = {}
         self._load_raw(columns)
