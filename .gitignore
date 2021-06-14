@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# Ignose Notebooks
+*.ipynb 
+
+# Ignore VS Code settings
+.vscode/

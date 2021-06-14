@@ -1,1 +1,2 @@
-# Instructions what happens if package is loaded
+# Give access to classes directly
+from datastack.sheet import Sheet
