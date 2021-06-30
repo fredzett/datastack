@@ -134,3 +134,6 @@ dmypy.json
 
 # Ignore VS Code settings
 .vscode/
+
+# Ignore sandbox.py file
+sandbox.py
