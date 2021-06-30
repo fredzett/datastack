@@ -9,9 +9,7 @@ More to follow.
 
 ```python
 !pip install git+https://github.com/fredzett/datastack`
-
 from datastack import DataTable
 
 tbl = DataTable(a=[1,2,3], b=[4,5,6])
-...
 ```
