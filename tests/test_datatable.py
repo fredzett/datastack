@@ -107,3 +107,9 @@ def test_drop_bools():
     tbl_expected = DataTable()
     assert tbl == tbl_expected
 
+def test_select():
+    tbl = DataTable(a=[1,2,3,4], b=[2,3,4,2], c=list("abcd"))
+    tbl.select("a", "b")
+
+    tbl_expected = DataTable(a=[1,2,3,4], b=[2,3,4,2])
+    assert tbl == tbl_expected

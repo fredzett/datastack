@@ -1,7 +1,8 @@
-from __future__ import annotations 
-#import collections
-import numpy as np 
+from __future__ import annotations
+
+import numpy as np
 from typing import Collection, Dict, List, Union, Tuple
+
 
 def _len_first(d: Dict) -> np.ndarray:
     first = list(d.values())[0]
@@ -9,6 +10,7 @@ def _len_first(d: Dict) -> np.ndarray:
         return 1
     else:
         return len(first)
+
 
 def _process_input(col_data):
     
@@ -132,6 +134,15 @@ class DataTable:
         self._update_data(out)
         return self
 
+    def select(self, *cols: str) -> DataTable:
+        out = {} 
+        for c in cols:
+            if not c in self._labels: raise ValueError(f"Column {c} not in DataTable")
+            out[c] = self._data[c]
+        self._update_data(out)
+        return self
+
+
     def drop(self, *idx: Union[Tuple[int], List[bool]]) -> DataTable:
         if type(idx[0]) == int:
            return self._drop_by_idxs(*idx)
@@ -165,7 +176,6 @@ class DataTable:
             return DataTable._from_dict(self._data)
 
     def __eq__(self, other):
-
         if isinstance(other, self.__class__):
             
             def _check_dict(a: Dict,b: Dict) -> bool:
@@ -204,7 +214,6 @@ class DataTable:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    
+
     def get_column(self,label):
         return DataTable._from_dict({label:self._data[label]})
-    
