@@ -2,8 +2,11 @@
 
 #env:#
 #	conda activate datastack
+
+# tests/test_datatable.py
+#tests/test*.py    
 entr:
-	ls datastack/datatable.py | entr -c pytest -v tests/test_datatable.py    
+	ls */*.py | entr -c pytest -v tests/test_sandbox.py
 
 test:
 	pytest tests/test_datatable.py
@@ -15,6 +18,8 @@ black:
 	black datastack/*.py
 
 flake:
-	flake8 datastack/datatable.py
+	flake8 datastack/datacolumn.py
 
 check: test clean flake
+
+run: test clean black

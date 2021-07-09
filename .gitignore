@@ -137,3 +137,8 @@ dmypy.json
 
 # Ignore sandbox.py file
 sandbox.py
+_test_sandbox.py
+_test_datatable.py
+ToDos.md
+testmarp.md
+OLD_datatable.py
