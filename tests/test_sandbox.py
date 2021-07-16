@@ -28,76 +28,78 @@ def test_to_dict():
 def test_equal_1():
     c = DataColumn("A", (1,2,4,5,6))
     out = c == c
-    assert all(out == np.array((True, True, True, True, True)))
+    assert out == DataColumn("", (True, True, True, True, True))
 
 def test_notequal_1():
     c = DataColumn("A", (1,2,4,5,6))
     d = DataColumn("B", (2,1,2,3,2,3))
     out = c != d
-    assert all(out == np.array((True, True, True, True, True)))
+    assert out == DataColumn("",(True, True, True, True, True))
 
 def test_equal_2():
     c = DataColumn("A", (1,2,4,5,6))
     out = c == 4
-    assert all(out == np.array((False, False, True, False, False)))
+    assert out == DataColumn("", (False, False, True, False, False))
     c = DataColumn("A", (1,1,1,1,1))
     out = c == 1 
-    assert all(out == np.array((True, True, True, True, True)))
+    assert out == DataColumn("", (True, True, True, True, True))
 
 def test_notequal_2():
     c = DataColumn("A", (1,2,4,5,6))
     out = c != 4
-    assert all(out == np.array((True, True, False, True, True)))
+    assert out == DataColumn("",(True, True, False, True, True))
     c = DataColumn("A", (1,1,1,1,1))
     out = c != 1 
-    assert all(out == np.array((False, False, False, False, False)))
+    assert out == DataColumn("",(False, False, False, False, False))
 
 def test_greaterthen_1():
     c = DataColumn("A", (1,2,4,5,6))
     out = c > c
-    assert all(out == np.array((False, False,False,False,False)))
+    assert out == DataColumn("", (False, False,False,False,False))
 
 def test_greaterthen_2():
     c = DataColumn("A", (1,2,4,5,6))
     out = c > 4
-    assert all(out == np.array((False, False, False, True, True)))
+    assert out == DataColumn("", (False, False, False, True, True))
     c = DataColumn("A", (2,2,2,2,2))
     out = c > 1 
-    assert all(out == np.array((True, True, True, True, True)))
+    assert out == DataColumn("", (True, True, True, True, True))
 
 def test_greaterequalthen_1():
     c = DataColumn("A", (1,2,4,5,6))
     out = c >= c
-    assert all(out == np.array((True,True,True,True,True,)))
+    assert out == DataColumn("", (True,True,True,True,True,))
 
 def test_greaterequalthen_2():
     c = DataColumn("A", (1,2,4,5,6))
     out = c >= 4
-    assert all(out == np.array((False, False, True, True, True)))
+    assert out == DataColumn("", (False, False, True, True, True))
     c = DataColumn("A", (2,2,2,2,2))
     out = c >= 1 
-    assert all(out == np.array((True, True, True, True, True)))
+    assert out == DataColumn("", (True, True, True, True, True))
 
 
 def test_smallerthen_1():
     c   = DataColumn("A", (1,2,4,5,6))
     out = c < c
-    assert all(out == np.array((False, False,False,False,False)))
+    assert out == DataColumn("", (False, False,False,False,False))
 
 def test_smallerthen_2():
     c   = DataColumn("A", (1,2,4,5,6))
     out = c < 3
-    assert all(out == np.array((True, True,False,False,False)))
+    assert out == DataColumn("", (True, True,False,False,False))
+    out = c < 3
+    assert out == DataColumn("", (False, False, False, False, False))
 
 def test_smallerequalthen_1():
     c   = DataColumn("A", (1,2,4,5,6))
     out = c <= c
-    assert all(out == np.array((True, True, True, True, True)))
+    assert DataColumn("", (True, True, True, True, True))
 
 def test_smallerequalthen_2():
     c   = DataColumn("A", (1,2,4,5,6))
     out = c <= 3
-    assert all(out == np.array((True, True,False,False,False)))
+    assert DataColumn("", (True, True,False,False,False))
 
 def test_add_cols():
     c1 = DataColumn("A", (1,2,3))

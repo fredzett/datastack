@@ -6,7 +6,7 @@
 # tests/test_datatable.py
 #tests/test*.py    
 entr:
-	ls */*.py | entr -c pytest -v tests/test_sandbox.py
+	ls */*.py | entr -c pytest -v tests/test_*.py
 
 test:
 	pytest tests/test_datatable.py

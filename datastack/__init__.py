@@ -4,3 +4,12 @@ from datastack.datacolumn import (
     DataColumn, 
     are_equal
 )
+
+from datastack.datatable import (
+    DataTable
+)
+
+from datastack.expressions import (
+    ColExpr, LabelExpr,
+    col, label
+)

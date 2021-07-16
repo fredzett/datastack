@@ -64,92 +64,61 @@ class DataColumn:
     # Comparison operators
     ########################
 
-    def __eq__(self, other) -> np.ndarray:
+    def __eq__(self, other) -> DataColumn:
         'Checks elementwise if self(el) == other(el) and returns np.array with bools' 
-        if isinstance(other, self.__class__):
-            return self._data == other._data
-
-        if isinstance(other, Number):
-            return self._data == np.repeat(other, len(self))
-
+        if isinstance(other, self.__class__):            
+            if (self._dtype == np.str_) or (other._dtype == np.str_):
+                out = [True if el1 == el2 else False for el1, el2 in zip(self._data, other._data)]
+            else:
+                out = self._data == other._data
+        elif isinstance(other, Number):
+            out = self._data == np.repeat(other, len(self))
         elif isinstance(other, str):
-            return np.array([True if other == el else False for el in self._data])
-
+            out = np.array([True if el == other else False for el in self._data])
         else:
             raise TypeError(f"DataColumn cannot be compared with {type(other)}")
+
+        return DataColumn("", out)
 
     def __ne__(self, other) -> np.ndarray:
-        'Checks elementwise if self(el) == other(el) and returns np.array with bools' 
-        if isinstance(other, self.__class__):
-            return self._data != other._data
+        comp = self == other
+        comp._data = ~comp._data 
+        return comp
 
-        if isinstance(other, Number):
-            return self._data != np.repeat(other, len(self))
-
-        elif isinstance(other, str):
-            return np.array([True if other!= el else False for el in self._data])
-
+    def __gt__(self, other) -> DataColumn:
+        'Checks elementwise if self(el) > other(el) and returns DataColumn with bools' 
+        if isinstance(other, self.__class__):            
+            if (self._dtype == np.str_) or (other._dtype == np.str_):
+                raise TypeError(f"DataColumn(s) must be of numeric type to apply > check")
+            else:
+                out = self._data > other._data
+        elif isinstance(other, Number):
+            out = self._data > np.repeat(other, len(self))
         else:
             raise TypeError(f"DataColumn cannot be compared with {type(other)}")
 
-    def __gt__(self, other) -> np.ndarray:
-        'Checks elementwise if self(el) > other(el) and returns np.array with bools' 
-        if isinstance(other, self.__class__):
-            return self._data > other._data
+        return DataColumn("", out)
 
-        if isinstance(other, Number):
-            return self._data > np.repeat(other, len(self))
-
-        elif isinstance(other, str):
-            return np.array([True if other > el else False for el in self._data])
-
+    def __ge__(self, other) -> DataColumn:
+        'Checks elementwise if self(el) > other(el) and returns DataColumn with bools' 
+        if isinstance(other, self.__class__):            
+            if (self._dtype == np.str_) or (other._dtype == np.str_):
+                raise TypeError(f"DataColumn(s) must be of numeric type to apply > check")
+            else:
+                out = self._data >= other._data
+        elif isinstance(other, Number):
+            out = self._data >= np.repeat(other, len(self))
         else:
             raise TypeError(f"DataColumn cannot be compared with {type(other)}")
 
-    def __ge__(self, other) -> np.ndarray:
-        'Checks elementwise if self(el) >= other(el) and returns np.array with bools' 
-        if isinstance(other, self.__class__):
-            return self._data >= other._data
+        return DataColumn("", out)
 
-        if isinstance(other, Number):
-            return self._data >= np.repeat(other, len(self))
+    def __lt__(self, other) -> DataColumn:
+        return self > other # CHECK: why not other > self?
 
-        elif isinstance(other, str):
-            return np.array([True if other >= el else False for el in self._data])
+    def __le__(self, other) -> DataColumn:
+        return self >= other # Check: why not other >= self?
 
-        else:
-            raise TypeError(f"DataColumn cannot be compared with {type(other)}")
-
-    def __lt__(self, other) -> np.ndarray:
-        'Checks elementwise if self(el) > other(el) and returns np.array with bools' 
-        if isinstance(other, self.__class__):
-            return self._data < other._data
-
-        if isinstance(other, Number):
-            return self._data < np.repeat(other, len(self))
-
-        elif isinstance(other, str):
-            return np.array([True if other < el else False for el in self._data])
-
-        else:
-            raise TypeError(f"DataColumn cannot be compared with {type(other)}")
-
-    def __le__(self, other) -> np.ndarray:
-        'Checks elementwise if self(el) >= other(el) and returns np.array with bools' 
-        if isinstance(other, self.__class__):
-            return self._data <= other._data
-
-        if isinstance(other, Number):
-            return self._data <= np.repeat(other, len(self))
-
-        elif isinstance(other, str):
-            return np.array([True if other <= el else False for el in self._data])
-
-        else:
-            raise TypeError(f"DataColumn cannot be compared with {type(other)}")
-    def all_true(self):
-        'Returns True if all elements are True'
-        return all(self._data == True)
 
 
     ########################
@@ -182,15 +151,16 @@ class DataColumn:
         return self
 
     def __rsub__(self, other):
-        if isinstance(other, self.__class__):
-            self._data = other._data - self._data 
-
-        elif isinstance(other, Number):
-            self._data = other - self._data 
-        else:
-            raise TypeError(f"Cannot add type {type(other)} to DataColumn")  
-
-        return self
+        return (self - other) * -1
+        #if isinstance(other, self.__class__):
+        #    self._data = other._data - self._data 
+#
+        #elif isinstance(other, Number):
+        #    self._data = other - self._data 
+        #else:
+        #    raise TypeError(f"Cannot add type {type(other)} to DataColumn")  
+#
+        #return self
 
 
     def __mul__(self, other):
@@ -221,12 +191,10 @@ class DataColumn:
     def __rtruediv__(self, other):
         if isinstance(other, self.__class__):
             self._data = other._data / self._data 
-
         elif isinstance(other, Number):
             self._data = other / self._data
         else:
             raise TypeError(f"Cannot add type {type(other)} to DataColumn")  
-
         return self
 
     def __pow__(self, other):
@@ -252,6 +220,18 @@ class DataColumn:
 
         return self
 
+
+
+
+
+    ########################
+    # Iterator
+    ########################
+    def __iter__(self):
+        print("MOIN!")
+        return ColumnIterator(self)
+
+
     ########################
     # Other functions
     ########################
@@ -259,9 +239,12 @@ class DataColumn:
         self._label = name 
         return self
 
-    def sum(self) -> Number:
+    def sum(self, skip_nan=False) -> Number:
         if self._dtype == np.str_: raise TypeError("Cannot apply sum to data consisting of strings")
-        return self._data.sum()
+        if skip_nan: 
+            return np.nansum(self._data)
+        else:
+            return np.sum(self._data)
 
     def cumsum(self) -> DataColumn:
         if self._dtype == np.str_: raise TypeError("Cannot apply sum to data consisting of strings")
@@ -308,3 +291,20 @@ def are_equal(*cs: DataColumn) -> bool:
 
 def are_not_equal(*cs: DataColumn) -> bool:
     return not are_equal(*cs)
+
+class ColumnIterator:
+    'Iterator class used by DataColumn'
+    def __init__(self, dc: DataColumn):
+        self._datacolumn = dc
+        self._idx = 0
+    
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._idx < len(self._datacolumn):
+            result = self._datacolumn._data[self._idx]
+        else:
+            raise StopIteration
+        self._idx += 1
+        return result

@@ -14,8 +14,8 @@ def _dicts_equal(a: Dict, b: Dict) -> bool:
     for arr1, arr2 in zip(a.values(), b.values()):
         if not isinstance(arr1, np.ndarray): arr1 = np.asarray(arr1)
         if not isinstance(arr2, np.ndarray): arr2 = np.asarray(arr2)
-        if arr1.dtype != arr2.dtype:
-            return False
+        #if arr1.dtype.type != arr2.dtype.type:
+        #    return False
         if arr1.dtype.type is np.str_:
             checks.append(np.array_equal(arr1, arr2))
         else:
@@ -24,4 +24,8 @@ def _dicts_equal(a: Dict, b: Dict) -> bool:
         return False
     return True
 
+
+def cols_are_equal(col1, col2):
+    "Returns true"
+    return all(col1 == col2)
 
