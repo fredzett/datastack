@@ -19,6 +19,7 @@ def _dicts_equal(a: Dict, b: Dict) -> bool:
         if arr1.dtype.type is np.str_:
             checks.append(np.array_equal(arr1, arr2))
         else:
+            
             checks.append(np.allclose(arr1, arr2, rtol=1e-08))
     if not all(checks):
         return False
