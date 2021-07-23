@@ -1,3 +1,5 @@
+from numpy.core.shape_base import hstack
+from datastack.datatable import DataTable
 from datastack.datacolumn import are_equal
 import datastack as dt
 from datastack import DataColumn, are_equal
@@ -5,6 +7,8 @@ from datastack import DataColumn, are_equal
 from datastack.helper import _dicts_equal
 
 import numpy as np
+
+import pytest
 
 
 def test_dicts_equal():
@@ -15,9 +19,6 @@ def test_dicts_equal():
     d1, d2 = dict(a=np.array((1,2,3)), b=list("abcd")), dict(a=np.array((1,2,3)), b=list("abcd"))
     assert _dicts_equal(d1,d2)
 
-def test_from_dict():
-    c = DataColumn.from_dict(h1=(1,2,3))
-    assert are_equal(c, DataColumn("h1", (1,2,3)))
 
 def test_to_dict():
     c = DataColumn("h1",(1,2,3))
@@ -26,13 +27,13 @@ def test_to_dict():
 
 
 def test_equal_1():
-    c = DataColumn("A", (1,2,4,5,6))
+    c = DataColumn("A",(1,2,4,5,6))
     out = c == c
     assert out == DataColumn("", (True, True, True, True, True))
 
 def test_notequal_1():
-    c = DataColumn("A", (1,2,4,5,6))
-    d = DataColumn("B", (2,1,2,3,2,3))
+    c = DataColumn("A",(1,2,4,5,6))
+    d = DataColumn("B",(2,1,2,3,2,3))
     out = c != d
     assert out == DataColumn("",(True, True, True, True, True))
 
@@ -227,3 +228,49 @@ def test_rename():
     c = c.rename("NewName")
     exp = DataColumn("NewName", (True, True, False))
     assert are_equal(c, exp)
+
+
+def test_append():
+    c = DataColumn("H1", (1,2,3))
+    c = c.append(19)
+    exp = DataColumn("H1",(1,2,3,19))
+    assert are_equal(c, exp)
+    
+    c = DataColumn("H1", (1,2,3))
+    c = c.append("19")
+    exp = DataColumn("H1",("1","2","3","19"))
+    assert are_equal(c, exp)
+
+    c = DataColumn("H1", ("1dfdf","2","3"))
+    c = c.append("19")
+    exp = DataColumn("H1",("1dfdf","2","3","19"))
+    assert are_equal(c, exp)
+
+def test_vstack():
+    col1 = DataColumn("H1", (1,2,3))
+    col2 = DataColumn("H1", (4,45,6))
+    out = col1.vstack(col2)
+    exp = DataColumn("H1", (1,2,3,4,45,6))
+    assert are_equal(out, exp)
+
+def test_hstack():
+    col1 = DataColumn("H1", (1,2,3))
+    col2 = DataColumn("H2", (4,45,6))
+    out = col1.hstack(col2)
+    exp = DataTable(H1=(1,2,3), H2=(4,45,6))
+    assert out == exp
+    
+
+    col1 = DataColumn("H1", (1,2,3))
+    col2 = DataColumn("H2", (4,45))
+    with pytest.raises(ValueError):
+        col1.hstack(col2)
+
+    col1 = DataColumn("H1", (1,2,3))
+    col2 = DataColumn("H1", (4,45,4))
+    with pytest.raises(ValueError):
+        col1.hstack(col2)
+
+
+
+

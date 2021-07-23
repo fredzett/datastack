@@ -6,10 +6,12 @@
 # tests/test_datatable.py
 #tests/test*.py    
 entr:
-	ls */*.py | entr -c pytest -v tests/test_*.py
+	ls */*.py | entr -c pytest 
+	
+# tests/**/test_*.py
 
 test:
-	pytest tests/test_datatable.py
+	pytest -v
 
 clean:
 	rm -rf tests/__pycache__ .pytest_cache

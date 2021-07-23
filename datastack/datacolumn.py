@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import numpy as np
 from numbers import Number
-from typing import Collection, Dict, Type, Union
-
+from typing import Collection, Dict, Type, Union, Any
+import datastack as dt
 
 def unpack1ddict(d: Dict):
     label, data = list(d.keys())[0], list(d.values())[0]
@@ -59,6 +59,9 @@ class DataColumn:
     ########################
     def to_dict(self):
         return {self._label:self._data}
+
+    def to_array(self):
+        return self._data
 
     ########################
     # Comparison operators
@@ -225,10 +228,41 @@ class DataColumn:
 
 
     ########################
+    # Bind methods
+    ########################
+    def append(self, el: Any) -> Self:
+        '''Appends an element to the end of the DataColumn
+        
+        Example:
+
+        col = (DataColumn("H1", (1,2,3))
+              .append(34)
+              )
+
+        > DataColumn("H1", (1,2,3,4))
+        '''
+        self._data = np.hstack((self._data, np.array([el])))
+        return self
+
+    def vstack(self, other: DataColumn) -> DataColumn:
+        '''Appends a DataColumn to the end of the DataColumn'''
+        if not isinstance(other, DataColumn): raise TypeError(f"vstack requires a DataColumn as a parameter. You provided {type(other)}.")
+        data = np.hstack((self._data, other._data))
+        return DataColumn(self._label, data)
+
+    def hstack(self, other: DataColumn) -> dt.DataTable:
+        if not len(self) == len(other): raise ValueError("Both DataColumns must have the same number of elements to be hstacked")
+        if not isinstance(other, self.__class__): raise TypeError(f"You can only hstack DataColumns not {type(other)}")
+        
+        if self._label == other._label: raise ValueError("Cannot hstack two datacolumns with same label")
+
+        new_dict = dict(self.to_dict(), **other.to_dict())
+        return dt.DataTable.from_dict(new_dict)        
+
+    ########################
     # Iterator
     ########################
     def __iter__(self):
-        print("MOIN!")
         return ColumnIterator(self)
 
 

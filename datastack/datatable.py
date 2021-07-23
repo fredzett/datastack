@@ -1,9 +1,12 @@
 from __future__ import annotations
-from datastack.expressions import ColExpr, LabelExpr
+from datastack.expressions import ColExpr, Expr, LabelExpr
 from datastack import DataColumn 
 from datastack.helper import _dicts_equal
 import numpy as np
-from typing import Dict, Tuple, Any, Collection, List, Type, Union
+import pandas as pd # Work around!
+
+
+from typing import Dict, OrderedDict, Tuple, Any, Collection, List, Type, Union
 from numbers import Number 
 
 class DataTable:
@@ -59,7 +62,7 @@ class DataTable:
         return str(self._data)
 
     ##########################
-    # Construction
+    # from methods
     #########################
     @staticmethod
     def from_dict(d: Dict[str, Tuple[Any]]):
@@ -69,6 +72,19 @@ class DataTable:
     def _from_label_and_data(labels, columns):
        d = {label:data for label, data in zip(labels, columns)}
        return DataTable(**d)
+
+    @staticmethod
+    def _from_pandas(df: pd.DataFrame) -> DataTable:
+        return DataTable.from_dict(df.to_dict('list'))    
+
+    ##########################
+    # to methods
+    #########################
+    def to_df(self):
+        '''Converts DataTable into pandas dataframe'''
+        d = self._data
+        return pd.DataFrame(d)
+
 
     ##########################
     # Comparators
@@ -101,10 +117,13 @@ class DataTable:
         return self
     
     
-    def select(self, e: LabelExpr) -> Self:#Union[DataTable, DataColumn]:
+    def select(self, *e: LabelExpr) -> Self:#Union[DataTable, DataColumn]:
         # Collect labels for which e is True
-        idx = e._collect(self)
-        print(idx)
+        exp = e[0]
+        for es in e[1:]:
+            exp |= es
+        idx = exp._collect(self)
+        #idx = e._collect(self)
         # Return labels where idx == True^
         labels = np.array(list(self._data.keys()))[idx]
         # TODO: clean up
@@ -113,19 +132,48 @@ class DataTable:
             out[label] = self._data[label]
         return DataTable.from_dict(out)
 
-    def mutate(self, **d: Dict[label: str, e: ColExpr]) -> Self:
-        label = list(d.keys())[0]
-        exp = d.pop(label)
-        data = exp._collect(self)
-        self.append_column(label, data)
+    def mutate(self, **d: Dict[label: str, e: Union[ColExpr, Collection]]) -> Self:
+        for label, exp in d.items():
+            if isinstance(exp, Expr): 
+                data = exp._collect(self)
+            elif isinstance(exp, Collection):
+                data = exp
+            else:
+                raise ValueError(f"Invalide datatype for mutation")
+            
+            self = self.append_column(**{label:data})
+        return self
+    
+
+    def order_by(self, *e: LabelExpr, **kwargs) -> DataTable:
+        
+        # Check if sort order ('asc') was given
+        if not "asc" in kwargs:
+            asc = [True]
+        else:
+            asc = kwargs["asc"]
+       
+        # Unpack multiple expressions
+        col_labels = [self._labels[expr._collect(self)][0] for expr in e]
+
+        #  check and correct sort order list 
+        n = len(col_labels)
+        if len(asc) != n:
+            if len(asc) == 1: 
+                asc = asc * n
+            else:
+                raise ValueError(f"Sort order cannot contain {len(asc)} elements for {n} columns to sort.")
+        
+        # Reverse order for lexsort
+        col_labels = col_labels[::-1]
+        asc = asc[::-1]
+
+        data = [self.get_column(label)._data for label in col_labels]
+    
+        idx = self._lexsort(data, asc)
+        self._data = {k:v[idx] for k,v in self._data.items()}
         return self
 
-    def order_by(self, ) -> Self:
-        raise NotImplementedError("TODO")
-
-    #def order_by(self, *e: Expr) -> DataTable:
-    #    col_labels = e(self)
-    #    return self._order_by(*col_labels)
     
     ##########################
     # Accessing
@@ -150,7 +198,7 @@ class DataTable:
 
     def __getitem__(self, idx):
         if isinstance(idx,str):
-            return self.get_columm(idx)
+            return self.get_column(idx)
         else:
             raise NotImplementedError("TODO")
 
@@ -158,10 +206,17 @@ class DataTable:
     ##########################
     # Append
     #########################
-    def append_column(self, label: str, data: Collection) -> DataTable:
+    def append_column(self, **d: Dict) -> Self:
+        
+        # Case 1: empty DataTable
+        if not self._data: return DataTable.from_dict(d)
+
+        # Case 2: non-empty DataTable
         new_data = dict(self._data) # Make copy of dict
-        if label in new_data.keys(): raise ValueError(f"Column '{label}' already exists!")
-        new_data[label] = data
+        for label, data in d.items():
+            #if label in self._labels:
+            #    raise ValueError(f"Column '{label}' already exists!")
+            new_data[label] = data
         self._data, self._labels = self._check_and_process(**new_data)
         return self
 
@@ -177,10 +232,25 @@ class DataTable:
     def vstack(self, other) -> DataTable:
         if not isinstance(other, self.__class__): raise TypeError(f"Object of type {type(other)} cannot be stacked onto DataTable.")
 
-        # continue here!
-        pass
-
+        if sorted(self._labels) != sorted(other._labels): raise ValueError(f"Both DataTables must have the same column labels")
     
+        out = DataTable()
+        for label in self._labels:
+            col1, col2 = self.get_column(label), other.get_column(label)
+            col = col1.vstack(col2)
+            out = out.append_column(**col.to_dict())
+        return out
+
+    def hstack(self, other) -> DataTable:
+        if not isinstance(other, self.__class__): 
+            raise TypeError(f"Object of type {type(other)} cannot be stacked onto DataTable.")
+
+        for label in other._labels:
+            col = other.get_column(label)
+            self.append_column(**col.to_dict())
+        return self
+        #if set(self._labels).intersection(other._labels): ValueError(f"D")
+
     ##########################
     # Own methods
     #########################
@@ -192,14 +262,40 @@ class DataTable:
         return DataTable.from_dict(out)
 
 
-    def _order_by(self, *labels: str) -> Self:
+    def _lexsort(self, arrs: List[np.ndarray], asc: List[bool]) -> np.ndarray[bool]:
         'Sort table by given columns'
-        
-        data = [self.get_column(label)._data for label in reversed(labels)]
-        idx = np.lexsort(data)
-        for label, values in self._data.items():
-            self._data[label] = values[idx]
-        return self
+        # See https://stackoverflow.com/questions/68486204/dict-sort-by-multiple-keys-descending-ascending
+        def custom_lexsort(arrs, asc=True):
+            """
+            Lexsort a collection of arrays in ascending or descending order.
+
+            Parameters
+            ----------
+            arrs : sequence[array-like]
+                Sequence of arrays to sort.
+            asc : array-like[bool]
+                Sequence of True for ascending elements of `keys`,
+                False for descending. Must broadcast to `(len(arrs),)`.
+            """
+            def make_key(a, asc):
+                if np.issubdtype(a.dtype, np.number):
+                    key = a
+                else:
+                    _, key = np.unique(a, return_inverse=True)
+                if asc:
+                    return key
+                elif np.issubdtype(key.dtype, np.unsignedinteger):
+                    return np.iinfo(key.dtype).max + 1 - key
+                else:
+                    return -key
+
+            
+            keys = [make_key(*x) for x in zip(arrs, asc)]
+            return np.lexsort(keys) # lexsort requires reverse order
+
+        #print(arrs, asc)
+        return custom_lexsort(arrs, asc)
+
 
     def _contains(self, s: str) -> DataTable:
         out = {}
@@ -226,4 +322,6 @@ class TableIterator:
             raise StopIteration
         self._idx += 1
         return result 
+
+
 

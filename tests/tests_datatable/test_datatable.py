@@ -1,9 +1,12 @@
+from pandas.core.frame import DataFrame
 from datastack.datacolumn import DataColumn, are_equal
 from datastack import DataTable 
 from datastack.helper import _dicts_equal
 import numpy as np 
+import pandas as pd
 
 import pytest
+
 
 def test_init1():
     tbl = DataTable(a=(1,2,3), b=(4,4,6))
@@ -60,13 +63,6 @@ def test_get_row():
     with pytest.raises(ValueError):
         tbl.get_row(4)
 
-def test_order_by():
-    tbl = (DataTable(a=(4,2,1,3), b=("a","b","c","a"), c=(10,9,8,7))
-        ._order_by("b","a")
-    )
-    exp = DataTable(a=(3,4,2,1), b=("a","a","b","c"), c=(7,10,9,8))
-    assert tbl == exp
-    
 
 def test_append_row():
     tbl = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=(10,9,8,7))
@@ -77,4 +73,34 @@ def test_append_row():
     tbl = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=("10","9","8","7dfd"))
     tbl.append_row(a="10", b=122.32323, c=14)
     exp = DataTable(a=("4","2","1","3","10"), b=(1,2,3,4,122.32323), c=("10","9","8","7dfd","14"))
+    assert tbl == exp
+
+
+def test_append_column():
+    tbl = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=(10,9,8,7))
+    tbl = tbl.append_column(d=(4,5,6,7))
+    exp = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=(10,9,8,7),d=(4,5,6,7))
+    assert tbl == exp
+
+def test_vstack():
+    tbl1 = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=(10,9,8,7))
+    tbl2 = DataTable(a=(1,2), b=(3,4), c=(10,9))
+    out = tbl1.vstack(tbl2)
+    exp = DataTable(a=(4,2,1,3,1,2), b= (1,2,3,4,3,4), c=(10,9,8,7,10,9))
+    assert out == exp
+
+def test_hstack():
+    tbl1 = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=(10,9,8,7))
+    tbl2 = DataTable(d=(4,2,1,3), e=list("abcd"), f=(10.,9,8,7))
+    out = tbl1.hstack(tbl2)
+    exp = DataTable(a=(4,2,1,3), b=(1,2,3,4), c=(10,9,8,7), 
+                    d=(4,2,1,3), e=list("abcd"), f=(10.,9,8,7))
+    assert out == exp
+
+
+def test_from_pandas():
+    data = {"a":(1,2,3), "b":(4,5,6), "c":list("abc")}
+    df = pd.DataFrame(data)
+    tbl = DataTable._from_pandas(df)
+    exp = DataTable(a=(1,2,3), b=(4,5,6), c=list("abc"))
     assert tbl == exp
