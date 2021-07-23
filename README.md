@@ -11,7 +11,21 @@ More to follow.
 import sys
 !{sys.executable} -m pip install git+"https://github.com/fredzett/datastack"
 
-from datastack import DataTable, DataColumn, col, labels
+from datastack import DataTable, DataColumn, col, label
+import numpy as np
 
-tbl = DataTable(a=[1,2,3], b=[4,5,6])
+# Create Table with 1 Mio rows
+n = 1_000_000
+tbl = DataTable(a=np.random.choice(range(100),n),
+                b=np.random.rand(n),
+                c=np.random.choice(range(100),n),
+                d=np.random.choice(list("abcefdsgekd"), n))
+
+# Apply verbs
+tbl = (tbl
+        .filter(col("c").larger_then(3.5)) 
+        .mutate(NewCol=col("c") * col("a") * 12.24)
+        .order_by(label("c"), label("NewCol"), asc=[True, False])
+        .select(label().contains("New") | label("c"))
+        )
 ```
