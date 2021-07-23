@@ -11,5 +11,5 @@ from datastack.datatable import (
 
 from datastack.expressions import (
     ColExpr, LabelExpr,
-    col, label
+    col, label, desc
 )

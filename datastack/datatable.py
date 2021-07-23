@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datastack.expressions import ColExpr, Expr, LabelExpr
+from datastack.expressions import ColExpr, Expr, LabelExpr, col
 from datastack import DataColumn 
 from datastack.helper import _dicts_equal
 import numpy as np
@@ -8,6 +8,7 @@ import pandas as pd # Work around!
 
 from typing import Dict, OrderedDict, Tuple, Any, Collection, List, Type, Union
 from numbers import Number 
+import inspect
 
 class DataTable:
     def __init__(self, **labels_and_data: Dict[str, Tuple[Any]]):
@@ -145,24 +146,24 @@ class DataTable:
         return self
     
 
-    def order_by(self, *e: LabelExpr, **kwargs) -> DataTable:
-        
-        # Check if sort order ('asc') was given
-        if not "asc" in kwargs:
-            asc = [True]
-        else:
-            asc = kwargs["asc"]
+    def order_by(self, *e: LabelExpr) -> DataTable:
        
         # Unpack multiple expressions
-        col_labels = [self._labels[expr._collect(self)][0] for expr in e]
+        asc = [True] * len(e)
+        col_labels = []
+        for i, expr in enumerate(e):
+            res = expr._collect(self)
 
-        #  check and correct sort order list 
-        n = len(col_labels)
-        if len(asc) != n:
-            if len(asc) == 1: 
-                asc = asc * n
+            # res can be (False, arr[bool]) or arr[bool]
+            if type(res) == tuple:
+                order, label = res
+                asc[i] = order
             else:
-                raise ValueError(f"Sort order cannot contain {len(asc)} elements for {n} columns to sort.")
+                label = res
+            label = self._labels[label][0]
+          
+            col_labels.append(label)
+
         
         # Reverse order for lexsort
         col_labels = col_labels[::-1]

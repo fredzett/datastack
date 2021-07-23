@@ -1,11 +1,11 @@
-from datastack import DataTable, DataColumn, label, col
+from datastack import DataTable, DataColumn, label, col, desc
 import pytest 
 
 import numpy as np
 
 def test_one():
     tbl = (DataTable(a=(1,2,1,2,3,1), b=(4,5,6,3,2,1),c=(6,7,8,1,2,3))
-          .order_by(label("b"), asc=[False])
+          .order_by(desc(label("b")))
           )
     exp = DataTable(a=(1,2,1,2,3,1), b=(6,5,4,3,2,1), c=(8,7,6,1,2,3))
     assert tbl == exp
@@ -19,7 +19,7 @@ def test_one_str():
 
 def test_two():
     tbl = (DataTable(b=(4,5,2,3,2,1),c=(6,7,8,1,2,3),a=(1,2,1,2,3,1))
-          .order_by(label("b"), label("a"), label("c"), asc=[True, False, True])
+          .order_by(label("b"), desc(label("a")), label("c"), )
           )
     exp = DataTable( b=(1,2,2,3,4,5), c=(3,2,8,1,6,7),a=(1,3,1,2,1,2))
     assert tbl == exp
@@ -43,7 +43,7 @@ def test_two_asc_desc():
         "col3": np.array((10, 11, 9, 8, 7, 2, 12, 100, 1))}
 
       tbl = (DataTable.from_dict(data)
-            .order_by(label("col1"), label("col2"), asc=[True, False])
+            .order_by(label("col1"), desc(label("col2")))
       )
       exp = DataTable.from_dict({'col1': np.array([1, 1, 2, 2, 3, 3, 4, 4, 5]),
  'col2': np.array(['d', 'a', 'c', 'b', 'c', 'b', 'd', 'a', 'e']),

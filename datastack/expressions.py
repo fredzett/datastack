@@ -5,7 +5,7 @@ from typing import List, Union, Any, Callable
 from abc import ABC
 
 import numpy as np
-
+import inspect
 #############################
 # Meta class for expressions
 #############################
@@ -172,6 +172,14 @@ class LabelExpr(Expr):
         self.f = f 
         return wrap_labelexpr(self)
 
+    def desc(self, l: LabelExpr) -> LabelExpr:
+        f = lambda x: (False, l._collect(x))
+        self.f = f
+        return wrap_labelexpr(self)
+
 def label(s: str = None) -> LabelExpr:
     return LabelExpr().label(s)
+
+def desc(l: LabelExpr) -> LabelExpr:
+    return LabelExpr().desc(l)
 
