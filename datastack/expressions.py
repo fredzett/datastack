@@ -124,7 +124,8 @@ class ColExpr(Expr):
         self.f = f 
         return wrap_colexpr(self)
 
-
+    def __le__(self, other):
+        raise NotImplementedError("To Come")
 
         
 def col(s: str) -> ColExpr:
